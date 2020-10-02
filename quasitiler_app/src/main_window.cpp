@@ -345,23 +345,23 @@ namespace dak::quasitiler_app
 
    QColor main_window_t::get_tile_color(int tile_index) const
    {
-      int row = tile_index / my_tiling->my_ambient_dim_count;
-      int col = tile_index % my_tiling->my_ambient_dim_count;
+      const int row = tile_index / my_tiling->dimensions_count();
+      const int col = tile_index % my_tiling->dimensions_count();
 
       int row_count;
-      if (row >= my_tiling->my_ambient_dim_count / 2 - 1
-              && my_tiling->my_ambient_dim_count % 2 == 0)
+      if (row >= my_tiling->dimensions_count() / 2 - 1
+              && my_tiling->dimensions_count() % 2 == 0)
       {
-         row_count = my_tiling->my_ambient_dim_count / 2 - 1;
+         row_count = my_tiling->dimensions_count() / 2 - 1;
       }
       else
       {
-         row_count = my_tiling->my_ambient_dim_count - 1;
+         row_count = my_tiling->dimensions_count() - 1;
       }
 
       // Interpolate color.
 
-      float cof = (float)col / (float)row_count;
+      const double cof = (double)col / (double)row_count;
 
       QColor leftColor  = my_color_table[row][0];
       QColor rightColor = my_color_table[row][1];
@@ -385,7 +385,7 @@ namespace dak::quasitiler_app
       const tiling_t tiling = *my_tiling;
       const drawing_t drawing = *my_drawing;
 
-      const int dim = tiling.get_ambient_dim();
+      const int dim = tiling.dimensions_count();
       const size_t vertex_count = drawing.my_vertex_storage.size();
 
       // Compute the projection of the lattice vertices.
@@ -400,11 +400,11 @@ namespace dak::quasitiler_app
 
       // Premultiply the edge generators by their correct sign.
 
-      float generator[tiling_t::MAX_DIM][2];
+      double generator[tiling_t::MAX_DIM][2];
       for (int ind = 0; ind < dim; ++ind)
       {
-         generator[ind][0] = tiling.sgn[ind] * tiling.generator[0][ind];
-         generator[ind][1] = tiling.sgn[ind] * tiling.generator[1][ind];
+         generator[ind][0] = tiling.signs()[ind] * tiling.generator[0][ind];
+         generator[ind][1] = tiling.signs()[ind] * tiling.generator[1][ind];
       }
 
       // Display the tiles.
@@ -421,7 +421,7 @@ namespace dak::quasitiler_app
          int quad_x[4];
          int quad_y[4];
          const drawing_t::tile_list_t* my_tile_storage = drawing.my_tile_storage;
-         for (int comb = tiling.tile_count; --comb >= 0; )
+         for (int comb = tiling.tile_combinations_count(); --comb >= 0; )
          {
             const int gen0 = tiling.tile_generator[comb][0];
             const int gen1 = tiling.tile_generator[comb][1];
@@ -573,8 +573,8 @@ namespace dak::quasitiler_app
 
    void main_window_t::create_tiling()
    {
-      my_tiling.reset(new tiling_t(5));
-      my_drawing.reset(new drawing_t(*my_tiling));
+      my_tiling  = std::make_shared<tiling_t>(5);
+      my_drawing = std::make_shared<drawing_t>(my_tiling);
    }
 
    void main_window_t::generate_tiling()
@@ -598,7 +598,6 @@ namespace dak::quasitiler_app
             {
                0., 0., 0., 0., 0., 0., 0., 0.,
             };
-            tiling->init_default(5);
             tiling->init(quasi_offsets);
             tiling->generate(quasi_bounds, *self->my_drawing, *self);
             self->my_drawing->locate_tiles(*self);
