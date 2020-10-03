@@ -10,7 +10,7 @@ add_library(quasitiler
 
 target_include_directories(quasitiler PUBLIC
    include
-   "${PROJECT_SOURCE_DIR}/utility/include"
+   "${PROJECT_SOURCE_DIR}/dak_utility/utility/include"
 )
 
 target_compile_features(quasitiler PUBLIC cxx_std_20)

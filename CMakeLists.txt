@@ -11,8 +11,7 @@ add_subdirectory(quasitiler)
 add_subdirectory(quasitiler_tests)
 add_subdirectory(quasitiler_app)
 
-add_subdirectory(utility)
-add_subdirectory(utility_tests)
+add_subdirectory(dak_utility/utility)
 
 add_subdirectory(QtAdditions)
 

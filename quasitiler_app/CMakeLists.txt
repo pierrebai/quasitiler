@@ -36,7 +36,7 @@ target_include_directories(quasitiler_app PUBLIC
    include
    resources
    "${PROJECT_SOURCE_DIR}/quasitiler/include"
-   "${PROJECT_SOURCE_DIR}/utility/include"
+   "${PROJECT_SOURCE_DIR}/dak_utility/utility/include"
    "${PROJECT_SOURCE_DIR}/QtAdditions/include"
 )
 
