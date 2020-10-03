@@ -5,6 +5,7 @@
 #include <dak/QtAdditions/QtUtilities.h>
 
 #include <QtWidgets/qboxlayout.h>
+#include <QtWidgets/qcombobox.h>
 #include <QtWidgets/qerrormessage.h>
 #include <QtWidgets/qtoolbar.h>
 #include <QtWidgets/qlabel.h>
@@ -44,7 +45,7 @@ namespace dak::quasitiler_app
    main_window_t::main_window_t()
       : progress_t(10000), my_generating_stopwatch(my_generating_time_buffer)
    {
-      create_tiling();
+      create_tiling(5);
 
       build_ui();
       fill_ui();
@@ -128,6 +129,15 @@ namespace dak::quasitiler_app
       my_tiling_label->hide();
       tiling_layout->addWidget(my_tiling_label);
 
+      my_dimension_count_label = new QLabel;
+      my_dimension_count_label->setText(tr("Dimensions"));
+      tiling_layout->addWidget(my_dimension_count_label);
+
+      my_dimension_count_combo = new QComboBox;
+      for (int i = 3; i <= 8; ++i)
+         my_dimension_count_combo->addItem(QString().asprintf("%d", i), QVariant(i));
+      tiling_layout->addWidget(my_dimension_count_combo);
+
       my_tiling_list = new QListWidget();
       my_tiling_list->setMinimumWidth(200);
       my_tiling_list->setSelectionMode(QListWidget::SelectionMode::SingleSelection);
@@ -165,6 +175,14 @@ namespace dak::quasitiler_app
       my_generate_tiling_timer->connect(my_generate_tiling_timer, &QTimer::timeout, [self = this]()
       {
          self->verify_async_tiling_generating();
+      });
+
+      my_dimension_count_combo->connect(my_dimension_count_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), [self = this](int an_index)
+      {
+         const int dim_count = self->my_dimension_count_combo->currentData().toInt();
+         self->create_tiling(dim_count);
+         self->generate_tiling();
+         self->update_toolbar();
       });
 
       // Toolbar.
@@ -208,6 +226,10 @@ namespace dak::quasitiler_app
    void main_window_t::fill_ui()
    {
       // Nothing to fill initially.
+      if (my_tiling)
+      {
+         my_dimension_count_combo->setCurrentIndex(my_tiling->dimensions_count() - 3);
+      }
       update_toolbar();
    }
 
@@ -571,9 +593,9 @@ namespace dak::quasitiler_app
    //
    // Asynchornous tiling generating.
 
-   void main_window_t::create_tiling()
+   void main_window_t::create_tiling(int a_dim_count)
    {
-      my_tiling  = std::make_shared<tiling_t>(5);
+      my_tiling  = std::make_shared<tiling_t>(a_dim_count);
       my_drawing = std::make_shared<drawing_t>(my_tiling);
    }
 
@@ -591,8 +613,8 @@ namespace dak::quasitiler_app
          {
             double quasi_bounds[2][tiling_t::MAX_DIM] =
             {
-               {  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  },
-               { 20., 20., 20., 20., 20., 20., 20., 20., },
+               { -20., -20., -20., -20., -20., -20., -20., -20., },
+               {  20.,  20.,  20.,  20.,  20.,  20.,  20.,  20., },
             };
             double quasi_offsets[tiling_t::MAX_DIM] =
             {

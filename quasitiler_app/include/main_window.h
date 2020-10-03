@@ -22,6 +22,7 @@
 class QToolButton;
 class QAction;
 class QTreeView;
+class QComboBox;
 class QDockWidget;
 class QTimer;
 class QLineEdit;
@@ -63,7 +64,7 @@ namespace dak::quasitiler_app
       void fill_ui();
 
       // Tiling.
-      void create_tiling();
+      void create_tiling(int a_dim_count);
       void load_tiling();
       void save_tiling();
       void edit_tiling();
@@ -112,6 +113,9 @@ namespace dak::quasitiler_app
 
       QLabel*        my_generating_attempts_label = nullptr;
       QLabel*        my_generating_time_label = nullptr;
+
+      QLabel*        my_dimension_count_label = nullptr;
+      QComboBox*     my_dimension_count_combo = nullptr;
 
       QTimer*        my_generate_tiling_timer = nullptr;
       QErrorMessage* my_error_message = nullptr;

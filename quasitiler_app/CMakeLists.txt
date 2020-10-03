@@ -19,7 +19,7 @@ add_executable(quasitiler_app WIN32
    "${PROJECT_SOURCE_DIR}/README.md"
 )
 
-set_target_properties(quasitiler_app PROPERTIES OUTPUT_NAME "Tantrix Solver")
+set_target_properties(quasitiler_app PROPERTIES OUTPUT_NAME "Quasitiler")
 
 target_link_libraries(quasitiler_app PUBLIC
    quasitiler
@@ -53,33 +53,26 @@ install(
    PATTERN "*.ilk" EXCLUDE 
 )
 
-install(
-   DIRECTORY
-   "${PROJECT_SOURCE_DIR}/quasitiler_solver/puzzles"
-   DESTINATION .
-   COMPONENT application
-)
-
 set(CPACK_GENERATOR NSIS)
-set(CPACK_PACKAGE_NAME "TantrixSolver")
+set(CPACK_PACKAGE_NAME "Quasitiler")
 set(CPACK_PACKAGE_VENDOR "Pierre Baillargeon")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Tantrix Solver - An application to solve Tantrix(tm) puzzles.")
-set(CPACK_PACKAGE_VERSION "1.2.3")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Quasitiler - An application to create quasi-periodic tilings.")
+set(CPACK_PACKAGE_VERSION "1.0.0")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
-set(CPACK_PACKAGE_VERSION_MINOR "2")
-set(CPACK_PACKAGE_VERSION_PATCH "3")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "Tantrix Solver")
+set(CPACK_PACKAGE_VERSION_MINOR "0")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Quasitiler")
 set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 
 set(CPACK_NSIS_MUI_ICON "${PROJECT_SOURCE_DIR}/quasitiler_app/resources/icon.ico")
 set(CPACK_NSIS_MUI_UNIICON "${PROJECT_SOURCE_DIR}/quasitiler_app/resources/icon.ico")
-set(CPACK_NSIS_INSTALLED_ICON_NAME "Tantrix Solver.exe")
-set(CPACK_NSIS_DISPLAY_NAME "Tantrix Solver")
+set(CPACK_NSIS_INSTALLED_ICON_NAME "Quasitiler.exe")
+set(CPACK_NSIS_DISPLAY_NAME "Quasitiler")
 set(CPACK_NSIS_CREATE_ICONS_EXTRA
-    "CreateShortCut '$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\Tantrix Solver.lnk' '$INSTDIR\\\\Tantrix Solver.exe'"
+    "CreateShortCut '$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\Quasitiler.lnk' '$INSTDIR\\\\Quasitiler.exe'"
 )
 set(CPACK_NSIS_DELETE_ICONS_EXTRA
-    "Delete '$SMPROGRAMS\\\\$START_MENU\\\\Tantrix Solver.lnk'"
+    "Delete '$SMPROGRAMS\\\\$START_MENU\\\\Quasitiler.lnk'"
 )
 INCLUDE(CPack)
 

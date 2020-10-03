@@ -290,7 +290,8 @@ namespace dak::quasitiler
          // this.  The cylinder would be OK, it is only one less face to
          // check.
 
-         if (epsilon_compare(scalar, 0) == 0) return false;
+         if (epsilon_compare(scalar, 0) == 0)
+            return false;
 
          // Multiply by 2.0 since the cell is centered at 0 an has
          // diameter 1/2, divide by scalar so 1.0 is the criteria, and
