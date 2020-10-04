@@ -3,7 +3,12 @@ A Windows application to generate quasi-periodic tilings.
 
 # Description
 
-TODO
+QuasiTiler draws Penrose tilings and their generalizations. For more explanations, see this web site at the University of Minnesota:
+
+![Quasitiler at the University of Minnesota](http://www.geom.uiuc.edu/apps/quasitiler/about.html)
+
+The original code was written by Eugenio Durand in Objective-C for the Next computer. I ported the Objective-C code to Java in 1999.
+Now, I ported that Java code to C++ and Qt.
 
 ![User Interface](https://github.com/pierrebai/quasitiler/blob/master/App.png "User Interface")
 

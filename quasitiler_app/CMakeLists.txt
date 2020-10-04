@@ -17,6 +17,7 @@ add_executable(quasitiler_app WIN32
 
    resources/resource.rc                resources/resource.h
 
+   "${PROJECT_SOURCE_DIR}/App.png"
    "${PROJECT_SOURCE_DIR}/LICENSE"
    "${PROJECT_SOURCE_DIR}/README.md"
 )
