@@ -1,8 +1,12 @@
 #include <main_window.h>
+#include <dimension_editor.h>
+#include <tile_group_editor.h>
 
 #include <resource.h>
 
 #include <dak/QtAdditions/QtUtilities.h>
+#include <dak/QtAdditions/QWidgetListWidget.h>
+#include <dak/QtAdditions/QWidgetListItem.h>
 
 #include <QtWidgets/qboxlayout.h>
 #include <QtWidgets/qcombobox.h>
@@ -136,10 +140,8 @@ namespace dak::quasitiler_app
          my_dimension_count_combo->addItem(QString().asprintf("%d", i), QVariant(i));
       tiling_layout->addWidget(my_dimension_count_combo);
 
-      my_tiling_list = new QListWidget();
+      my_tiling_list = new QWidgetListWidget();
       my_tiling_list->setMinimumWidth(200);
-      my_tiling_list->setSelectionMode(QListWidget::SelectionMode::SingleSelection);
-      my_tiling_list->setSelectionBehavior(QListWidget::SelectionBehavior::SelectRows);
       tiling_layout->addWidget(my_tiling_list);
 
       tiling_dock->setWidget(tiling_container);
@@ -154,10 +156,10 @@ namespace dak::quasitiler_app
       auto main_container = new QWidget;
       auto main_layout = new QVBoxLayout(main_container);
 
-      my_tiling_canvas = new canvas_t(this, [self=this](ui::drawing_t& drw)
-      {
-         self->draw_tiling(drw);
-      });
+      my_tiling_canvas = new canvas_t(this, [self = this](ui::drawing_t& drw)
+         {
+            self->draw_tiling(drw);
+         });
       my_tiling_canvas->transformer.mouse_interaction_modifier = ui::modifiers_t::none;
 
       main_layout->addWidget(my_tiling_canvas);
@@ -180,7 +182,9 @@ namespace dak::quasitiler_app
 
       my_dimension_count_combo->connect(my_dimension_count_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), [self = this](int an_index)
       {
+         self->stop_tiling();
          self->generate_tiling();
+         self->update_tiling();
          self->update_toolbar();
       });
 
@@ -206,6 +210,7 @@ namespace dak::quasitiler_app
 
       my_generate_tiling_action->connect(my_generate_tiling_action, &QAction::triggered, [self = this]()
       {
+         self->stop_tiling();
          self->generate_tiling();
          self->update_toolbar();
       });
@@ -224,12 +229,11 @@ namespace dak::quasitiler_app
 
    void main_window_t::fill_ui()
    {
-      // Nothing to fill initially.
-      if (my_tiling)
-      {
-         my_dimension_count_combo->setCurrentIndex(my_tiling->dimensions_count() - 3);
-      }
       update_toolbar();
+      my_dimension_count_combo->setCurrentIndex(2);
+      stop_tiling();
+      generate_tiling();
+      update_tiling();
    }
 
    /////////////////////////////////////////////////////////////////////////
@@ -332,10 +336,10 @@ namespace dak::quasitiler_app
    void main_window_t::create_color_table()
    {
       // Init color table.
-      for (int row = 0; row < tiling_t::MAX_DIM / 2; ++row)
+      for (int row = 0; row < sizeof(my_color_table) / sizeof(my_color_table[0]); ++row)
       {
-         int v = 255 - row * 15;
-         switch (row % 3)
+         int v = 255 - (row / 6) * 15;
+         switch (row % 6)
          {
          case 0:
             my_color_table[row][0] = ui::color_t(v, 80, 80);
@@ -349,19 +353,43 @@ namespace dak::quasitiler_app
             my_color_table[row][0] = ui::color_t(v, 80, v);
             my_color_table[row][1] = ui::color_t(v, v, 80);
             break;
+         case 3:
+            my_color_table[row][0] = ui::color_t(v, v / 2, 0);
+            my_color_table[row][1] = ui::color_t(0, v / 2, v);
+            break;
+         case 4:
+            my_color_table[row][0] = ui::color_t(v / 2, v, 0);
+            my_color_table[row][1] = ui::color_t(0, v, v / 2);
+            break;
+         case 5:
+            my_color_table[row][0] = ui::color_t(v, 0, v / 2);
+            my_color_table[row][1] = ui::color_t(v, v / 2, 0);
+            break;
          }
       }
    }
 
-   ui::color_t main_window_t::get_color(int index1, int index2) const
+   ui::color_t main_window_t::get_color(int a_tile_group_index, int a_parity_index) const
    {
-      if (index1 < 0 || index1 >= sizeof(my_color_table) / sizeof(my_color_table[0]))
+      if (a_tile_group_index < 0 || a_tile_group_index >= sizeof(my_color_table) / sizeof(my_color_table[0]))
          return ui::color_t(0, 0, 0);
 
-      if (index2 < 0 || index2 >= sizeof(my_color_table[0]) / sizeof(my_color_table[0][0]))
+      if (a_parity_index < 0 || a_parity_index >= sizeof(my_color_table[0]) / sizeof(my_color_table[0][0]))
          return ui::color_t(0, 0, 0);
 
-      return my_color_table[index1][index2];
+      return my_color_table[a_tile_group_index][a_parity_index];
+   }
+
+   void main_window_t::set_color(int a_tile_group_index, int a_parity_index, ui::color_t a_color)
+   {
+      if (a_tile_group_index < 0 || a_tile_group_index >= sizeof(my_color_table) / sizeof(my_color_table[0]))
+         return;
+
+      if (a_parity_index < 0 || a_parity_index >= sizeof(my_color_table[0]) / sizeof(my_color_table[0][0]))
+         return;
+
+      my_color_table[a_tile_group_index][a_parity_index] = a_color;
+      draw_tiling();
    }
 
    ui::color_t main_window_t::get_tile_color(int tile_index) const
@@ -386,13 +414,14 @@ namespace dak::quasitiler_app
       // Interpolate color.
 
       const double cof = (double)col / (double)row_count;
+      const double cof_complement = 1. - cof;
 
-      ui::color_t leftColor  = my_color_table[row][0];
-      ui::color_t rightColor = my_color_table[row][1];
+      const ui::color_t leftColor  = get_color(row, 0);
+      const ui::color_t rightColor = get_color(row, 1);
       return ui::color_t(
-         (int)((1.0 - cof) * leftColor.r   + cof * rightColor.r),
-         (int)((1.0 - cof) * leftColor.g + cof * rightColor.g),
-         (int)((1.0 - cof) * leftColor.b  + cof * rightColor.b));
+         (int)(cof_complement * leftColor.r + cof * rightColor.r),
+         (int)(cof_complement * leftColor.g + cof * rightColor.g),
+         (int)(cof_complement * leftColor.b + cof * rightColor.b));
 
    }
 
@@ -407,6 +436,9 @@ namespace dak::quasitiler_app
    void main_window_t::draw_tiling(ui::drawing_t& a_drw)
    {
       if (!my_tiling)
+         return;
+
+      if (!my_tiling->is_generated())
          return;
 
       if (!my_drawing)
@@ -516,7 +548,28 @@ namespace dak::quasitiler_app
 
       my_tiling_list->clear();
 
-      // TODO: fill tiling description in list view.
+      for (int i = 0; i < my_tiling->dimensions_count() / 2; ++i)
+      {
+         auto item = new tile_group_editor_t(i, get_color(i, 0), get_color(i, 1));
+         item->on_color_changed = [self = this](ui::color_t a_color, int a_tile_group_index, int a_parity_index)
+         {
+            self->set_color(a_tile_group_index, a_parity_index, a_color);
+         };
+         my_tiling_list->addItem(item);
+      }
+
+      for (int i = 0; i < my_tiling->dimensions_count(); ++i)
+      {
+         auto item = new dimension_editor_t(i, my_tiling_bounds[0][i], my_tiling_bounds[1][i]);
+         item->on_limits_changed = [self = this](int a_dim_index, double a_low_limit, double a_high_limit)
+         {
+            self->my_tiling_bounds[0][a_dim_index] = a_low_limit;
+            self->my_tiling_bounds[1][a_dim_index] = a_high_limit;
+            self->stop_tiling();
+            self->generate_tiling();
+         };
+         my_tiling_list->addItem(item);
+      }
 
       my_generating_attempts = 0;
       my_generating_stopwatch.elapsed();
@@ -601,6 +654,10 @@ namespace dak::quasitiler_app
 
    void main_window_t::generate_tiling()
    {
+      const int dim_count = my_dimension_count_combo->currentData().toInt();
+      my_tiling = std::make_shared<tiling_t>(dim_count);
+      my_drawing = std::make_shared<drawing_t>(my_tiling);
+
       my_stop_generating = false;
       my_generating_attempts = 0;
       my_generating_stopwatch.start();
@@ -608,27 +665,13 @@ namespace dak::quasitiler_app
       {
          try
          {
-            double quasi_bounds[2][tiling_t::MAX_DIM] =
-            {
-               { -20., -20., -20., -20., -20., -20., -20., -20., },
-               {  20.,  20.,  20.,  20.,  20.,  20.,  20.,  20., },
-            };
-            double quasi_offsets[tiling_t::MAX_DIM] =
-            {
-               0., 0., 0., 0., 0., 0., 0., 0.,
-            };
+            auto tiling = self->my_tiling;
+            auto drawing = self->my_drawing;
 
-            const int dim_count = self->my_dimension_count_combo->currentData().toInt();
-
-            auto tiling = std::make_shared<tiling_t>(dim_count);
-            auto drawing = std::make_shared<drawing_t>(tiling);
-
-            tiling->init(quasi_offsets);
-            tiling->generate(quasi_bounds, *drawing, *self);
+            tiling->init(self->my_tiling_offsets);
+            tiling->generate(self->my_tiling_bounds, *drawing, *self);
             drawing->locate_tiles(*self);
 
-            self->my_tiling = tiling;
-            self->my_drawing = drawing;
             self->draw_tiling();
 
             return 1;
@@ -671,7 +714,6 @@ namespace dak::quasitiler_app
       {
          showException("Could not generate the tiling:", ex);
       }
-      update_tiling();
    }
 
    void main_window_t::stop_tiling()

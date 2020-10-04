@@ -75,10 +75,11 @@ namespace dak::quasitiler
       //
       // Tiling descriptions.
 
-      int dimensions_count() const { return my_dimensions_count; }
-      int tile_combinations_count() const { return my_tile_combinations_count; }
-      const std::vector<int>& slope_orders() const { return my_slope_orders; }
-      const std::vector<int>& signs() const { return my_signs; }
+      int                     dimensions_count() const         { return my_dimensions_count; }
+      int                     tile_combinations_count() const  { return my_tile_combinations_count; }
+      const std::vector<int>& slope_orders() const             { return my_slope_orders; }
+      const std::vector<int>& signs() const                    { return my_signs; }
+      bool                    is_generated() const             { return my_is_generated; }
 
    private:
       ////////////////////////////////////////////////////////////////////////////
@@ -155,6 +156,7 @@ namespace dak::quasitiler
       int               my_dimensions_count = 5;
       int               my_cylinder_criteria_count = 0;
       double            my_cylinder_criteria[MAX_CYLR_COMB][MAX_DIM];
+      bool              my_is_generated = false;
    };
 }
 

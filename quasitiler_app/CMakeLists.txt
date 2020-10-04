@@ -12,6 +12,8 @@ find_package(Qt5 COMPONENTS WinExtras REQUIRED)
 add_executable(quasitiler_app WIN32
    src/quasitiler_app.cpp
    src/main_window.cpp                  include/main_window.h
+   src/dimension_editor.cpp             include/dimension_editor.h
+   src/tile_group_editor.cpp            include/tile_group_editor.h
 
    resources/resource.rc                resources/resource.h
 

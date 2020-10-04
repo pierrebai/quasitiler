@@ -580,6 +580,8 @@ namespace dak::quasitiler
 
    bool tiling_t::generate(double tiling_bounds[2][MAX_DIM], point_reporter_t& reporter, interruptor_t& an_interruptor)
    {
+      my_is_generated = false;
+
       // Find the bounds relative to the ambient space, for the bounds
       // in the tiling subspace in.
 
@@ -661,6 +663,7 @@ namespace dak::quasitiler
             return false;
       }
 
+      my_is_generated = true;
       return true;
    }
 

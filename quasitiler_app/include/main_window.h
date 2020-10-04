@@ -34,11 +34,17 @@ class QGraphicsView;
 class QGraphicsScene;
 class QErrorMessage;
 
+namespace dak::QtAdditions
+{
+   struct QWidgetListWidget;
+}
+
 namespace dak::quasitiler_app
 {
    using tiling_t  = dak::quasitiler::tiling_t;
    using drawing_t = dak::quasitiler::drawing_t;
    using canvas_t = dak::ui::qt::function_drawing_canvas_t;
+   using QWidgetListWidget = QtAdditions::QWidgetListWidget;
 
    /////////////////////////////////////////////////////////////////////////
    //
@@ -57,7 +63,8 @@ namespace dak::quasitiler_app
       void build_tiling_ui();
       void build_tiling_canvas();
       void create_color_table();
-      ui::color_t get_color(int index1, int index2) const;
+      ui::color_t get_color(int a_tile_group_index, int a_parity_index) const;
+      void set_color(int a_tile_group_index, int a_parity_index, ui::color_t a_color);
       ui::color_t get_tile_color(int tile_index) const;
 
       // Connect the signals of the UI elements.
@@ -112,7 +119,7 @@ namespace dak::quasitiler_app
       // UI elements.
       canvas_t*      my_tiling_canvas = nullptr;
 
-      QListWidget*   my_tiling_list = nullptr;
+      QWidgetListWidget*   my_tiling_list = nullptr;
       QLabel*        my_tiling_label = nullptr;
 
       QLabel*        my_generating_attempts_label = nullptr;
@@ -124,9 +131,19 @@ namespace dak::quasitiler_app
       QTimer*        my_generate_tiling_timer = nullptr;
       QErrorMessage* my_error_message = nullptr;
 
-      ui::color_t    my_color_table[tiling_t::MAX_DIM / 2][2];
 
       // Data.
+      ui::color_t    my_color_table[tiling_t::MAX_DIM / 2][2];
+      double         my_tiling_bounds[2][tiling_t::MAX_DIM] =
+      {
+         { -20., -20., -20., -20., -20., -20., -20., -20., },
+         { 20.,  20.,  20.,  20.,  20.,  20.,  20.,  20., },
+      };
+      double         my_tiling_offsets[tiling_t::MAX_DIM] =
+      {
+         0., 0., 0., 0., 0., 0., 0., 0.,
+      };
+
       std::shared_ptr<tiling_t>     my_tiling;
       std::shared_ptr<drawing_t>    my_drawing;
       std::filesystem::path         my_tiling_filename;
