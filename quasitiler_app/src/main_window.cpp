@@ -158,7 +158,7 @@ namespace dak::quasitiler_app
       {
          self->draw_tiling(drw);
       });
-      //my_tiling_canvas->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+      my_tiling_canvas->transformer.mouse_interaction_modifier = ui::modifiers_t::none;
 
       main_layout->addWidget(my_tiling_canvas);
 
