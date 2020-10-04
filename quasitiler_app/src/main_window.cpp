@@ -45,8 +45,6 @@ namespace dak::quasitiler_app
    main_window_t::main_window_t()
       : progress_t(10000), my_generating_stopwatch(my_generating_time_buffer)
    {
-      create_tiling(5);
-
       build_ui();
       fill_ui();
       connect_ui();
@@ -156,8 +154,11 @@ namespace dak::quasitiler_app
       auto main_container = new QWidget;
       auto main_layout = new QVBoxLayout(main_container);
 
-      my_tiling_canvas = new QGraphicsView;
-      my_tiling_canvas->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+      my_tiling_canvas = new canvas_t(this, [self=this](ui::drawing_t& drw)
+      {
+         self->draw_tiling(drw);
+      });
+      //my_tiling_canvas->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
 
       main_layout->addWidget(my_tiling_canvas);
 
@@ -179,8 +180,6 @@ namespace dak::quasitiler_app
 
       my_dimension_count_combo->connect(my_dimension_count_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), [self = this](int an_index)
       {
-         const int dim_count = self->my_dimension_count_combo->currentData().toInt();
-         self->create_tiling(dim_count);
          self->generate_tiling();
          self->update_toolbar();
       });
@@ -339,34 +338,37 @@ namespace dak::quasitiler_app
          switch (row % 3)
          {
          case 0:
-            my_color_table[row][0] = QColor(v, 80, 80);
-            my_color_table[row][1] = QColor(80, 80, v);
+            my_color_table[row][0] = ui::color_t(v, 80, 80);
+            my_color_table[row][1] = ui::color_t(80, 80, v);
             break;
          case 1:
-            my_color_table[row][0] = QColor(80, v, 80);
-            my_color_table[row][1] = QColor(80, v, v);
+            my_color_table[row][0] = ui::color_t(80, v, 80);
+            my_color_table[row][1] = ui::color_t(80, v, v);
             break;
          case 2:
-            my_color_table[row][0] = QColor(v, 80, v);
-            my_color_table[row][1] = QColor(v, v, 80);
+            my_color_table[row][0] = ui::color_t(v, 80, v);
+            my_color_table[row][1] = ui::color_t(v, v, 80);
             break;
          }
       }
    }
 
-   QColor main_window_t::get_color(int index1, int index2) const
+   ui::color_t main_window_t::get_color(int index1, int index2) const
    {
       if (index1 < 0 || index1 >= sizeof(my_color_table) / sizeof(my_color_table[0]))
-         return QColor(0, 0, 0);
+         return ui::color_t(0, 0, 0);
 
       if (index2 < 0 || index2 >= sizeof(my_color_table[0]) / sizeof(my_color_table[0][0]))
-         return QColor(0, 0, 0);
+         return ui::color_t(0, 0, 0);
 
       return my_color_table[index1][index2];
    }
 
-   QColor main_window_t::get_tile_color(int tile_index) const
+   ui::color_t main_window_t::get_tile_color(int tile_index) const
    {
+      if (!my_tiling)
+         return ui::color_t(0, 0, 0);
+
       const int row = tile_index / my_tiling->dimensions_count();
       const int col = tile_index % my_tiling->dimensions_count();
 
@@ -385,16 +387,24 @@ namespace dak::quasitiler_app
 
       const double cof = (double)col / (double)row_count;
 
-      QColor leftColor  = my_color_table[row][0];
-      QColor rightColor = my_color_table[row][1];
-      return QColor(
-         (int)((1.0 - cof) * leftColor.red()   + cof * rightColor.red()),
-         (int)((1.0 - cof) * leftColor.green() + cof * rightColor.green()),
-         (int)((1.0 - cof) * leftColor.blue()  + cof * rightColor.blue()));
+      ui::color_t leftColor  = my_color_table[row][0];
+      ui::color_t rightColor = my_color_table[row][1];
+      return ui::color_t(
+         (int)((1.0 - cof) * leftColor.r   + cof * rightColor.r),
+         (int)((1.0 - cof) * leftColor.g + cof * rightColor.g),
+         (int)((1.0 - cof) * leftColor.b  + cof * rightColor.b));
 
    }
 
    void main_window_t::draw_tiling()
+   {
+      if (!my_tiling_canvas)
+         return;
+
+      my_tiling_canvas->update();
+   }
+
+   void main_window_t::draw_tiling(ui::drawing_t& a_drw)
    {
       if (!my_tiling)
          return;
@@ -431,14 +441,12 @@ namespace dak::quasitiler_app
 
       // Display the tiles.
 
-      auto scene = new QGraphicsScene;
-
       //if (tilesDisplayed || edgesDisplayed || verticesDisplayed)
       {
          const double zoom = 30.;
 
-         const QColor edgeColor = QColor(128, 128, 128);
-         const QPen edgePen = QPen(edgeColor);
+         const ui::color_t edgeColor = ui::color_t(128, 128, 128);
+         const ui::stroke_t edgeStroke(1);
 
          int quad_x[4];
          int quad_y[4];
@@ -448,8 +456,7 @@ namespace dak::quasitiler_app
             const int gen0 = tiling.tile_generator[comb][0];
             const int gen1 = tiling.tile_generator[comb][1];
 
-            const QColor tileColor = get_tile_color(comb);
-            const QBrush tileBrush = QBrush(tileColor);
+            const ui::color_t tileColor = get_tile_color(comb);
 
             for (size_t ind = 0; ind < my_tile_storage[comb].size(); ++ind)
             {
@@ -464,18 +471,19 @@ namespace dak::quasitiler_app
                quad_y[3] = (int)(zoom * (vertices[vertex_index].y + generator[gen1][1]));
 
                {
-                  QPolygon polygon;
-                  polygon.append(QPoint(quad_x[0], quad_y[0]));
-                  polygon.append(QPoint(quad_x[1], quad_y[1]));
-                  polygon.append(QPoint(quad_x[2], quad_y[2]));
-                  polygon.append(QPoint(quad_x[3], quad_y[3]));
-                  polygon.append(QPoint(quad_x[0], quad_y[0]));
+                  ui::polygon_t polygon;
+                  polygon.points.push_back(ui::point_t(quad_x[0], quad_y[0]));
+                  polygon.points.push_back(ui::point_t(quad_x[1], quad_y[1]));
+                  polygon.points.push_back(ui::point_t(quad_x[2], quad_y[2]));
+                  polygon.points.push_back(ui::point_t(quad_x[3], quad_y[3]));
+                  polygon.points.push_back(ui::point_t(quad_x[0], quad_y[0]));
 
-                  auto item = new QGraphicsPolygonItem(polygon);
-                  item->setPen(edgePen);
-                  item->setBrush(tileBrush);
+                  a_drw.set_color(tileColor);
+                  a_drw.fill_polygon(polygon);
 
-                  scene->addItem(item);
+                  a_drw.set_color(edgeColor);
+                  a_drw.set_stroke(edgeStroke);
+                  a_drw.draw_polygon(polygon);
                }
             }
 
@@ -485,8 +493,6 @@ namespace dak::quasitiler_app
      //	       return;
          }
       }
-
-      my_tiling_canvas->setScene(scene);
    }
 
    /////////////////////////////////////////////////////////////////////////
@@ -593,21 +599,12 @@ namespace dak::quasitiler_app
    //
    // Asynchornous tiling generating.
 
-   void main_window_t::create_tiling(int a_dim_count)
-   {
-      my_tiling  = std::make_shared<tiling_t>(a_dim_count);
-      my_drawing = std::make_shared<drawing_t>(my_tiling);
-   }
-
    void main_window_t::generate_tiling()
    {
-      if (!my_tiling)
-         return;
-
       my_stop_generating = false;
       my_generating_attempts = 0;
       my_generating_stopwatch.start();
-      my_async_generating = std::async(std::launch::async, [self = this, tiling = my_tiling]()
+      my_async_generating = std::async(std::launch::async, [self = this]()
       {
          try
          {
@@ -620,9 +617,20 @@ namespace dak::quasitiler_app
             {
                0., 0., 0., 0., 0., 0., 0., 0.,
             };
+
+            const int dim_count = self->my_dimension_count_combo->currentData().toInt();
+
+            auto tiling = std::make_shared<tiling_t>(dim_count);
+            auto drawing = std::make_shared<drawing_t>(tiling);
+
             tiling->init(quasi_offsets);
-            tiling->generate(quasi_bounds, *self->my_drawing, *self);
-            self->my_drawing->locate_tiles(*self);
+            tiling->generate(quasi_bounds, *drawing, *self);
+            drawing->locate_tiles(*self);
+
+            self->my_tiling = tiling;
+            self->my_drawing = drawing;
+            self->draw_tiling();
+
             return 1;
          }
          catch (const std::exception&)

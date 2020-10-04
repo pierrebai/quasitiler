@@ -8,8 +8,6 @@
 
 namespace dak::quasitiler
 {
-   struct tiling_t;
-
    ////////////////////////////////////////////////////////////////////////////
    //
    // Integer vertex coordinates. A point in a n-dimensional integer grid.

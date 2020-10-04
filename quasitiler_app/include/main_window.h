@@ -7,6 +7,8 @@
 #include <dak/quasitiler/drawing.h>
 #include <dak/quasitiler/interruptor.h>
 
+#include <dak/ui/qt/function_drawing_canvas.h>
+
 #include <QtWidgets/qmainwindow.h>
 #include <QtWidgets/qlistwidget.h>
 
@@ -36,6 +38,7 @@ namespace dak::quasitiler_app
 {
    using tiling_t  = dak::quasitiler::tiling_t;
    using drawing_t = dak::quasitiler::drawing_t;
+   using canvas_t = dak::ui::qt::function_drawing_canvas_t;
 
    /////////////////////////////////////////////////////////////////////////
    //
@@ -54,8 +57,8 @@ namespace dak::quasitiler_app
       void build_tiling_ui();
       void build_tiling_canvas();
       void create_color_table();
-      QColor get_color(int index1, int index2) const;
-      QColor get_tile_color(int tile_index) const;
+      ui::color_t get_color(int index1, int index2) const;
+      ui::color_t get_tile_color(int tile_index) const;
 
       // Connect the signals of the UI elements.
       void connect_ui();
@@ -82,6 +85,7 @@ namespace dak::quasitiler_app
       bool interrupted() override;
 
       void draw_tiling();
+      void draw_tiling(ui::drawing_t& a_drw);
       void update_tiling();
       void update_toolbar();
       void update_generating_attempts();
@@ -106,7 +110,7 @@ namespace dak::quasitiler_app
       QToolButton*   my_stop_tiling_button = nullptr;
 
       // UI elements.
-      QGraphicsView* my_tiling_canvas = nullptr;
+      canvas_t*      my_tiling_canvas = nullptr;
 
       QListWidget*   my_tiling_list = nullptr;
       QLabel*        my_tiling_label = nullptr;
@@ -120,7 +124,7 @@ namespace dak::quasitiler_app
       QTimer*        my_generate_tiling_timer = nullptr;
       QErrorMessage* my_error_message = nullptr;
 
-      QColor         my_color_table[tiling_t::MAX_DIM / 2][2];
+      ui::color_t    my_color_table[tiling_t::MAX_DIM / 2][2];
 
       // Data.
       std::shared_ptr<tiling_t>     my_tiling;

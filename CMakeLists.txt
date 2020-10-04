@@ -12,6 +12,9 @@ add_subdirectory(quasitiler_tests)
 add_subdirectory(quasitiler_app)
 
 add_subdirectory(dak_utility/utility)
+add_subdirectory(dak_utility/geometry)
+add_subdirectory(dak_utility/ui)
+add_subdirectory(dak_utility/ui_qt)
 
 add_subdirectory(QtAdditions)
 
