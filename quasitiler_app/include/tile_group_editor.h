@@ -40,6 +40,9 @@ namespace dak::quasitiler_app
       // UI feedback.
       void select_color(int a_color_index);
 
+      void enterEvent(QEvent* event) override { QWidget::enterEvent(event); }
+      void leaveEvent(QEvent* event) override { QWidget::leaveEvent(event); }
+
       // UI.
       QLabel*        my_tile_group_name_label = nullptr;
       QPushButton*   my_color_buttons[2] = { nullptr, nullptr };

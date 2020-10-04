@@ -72,17 +72,17 @@ namespace dak::quasitiler_app
 
       // Fill the UI with the intial data.
       void fill_ui();
+      void fill_edge_color_ui();
 
       // Tiling.
-      void create_tiling(int a_dim_count);
       void load_tiling();
       void save_tiling();
       void edit_tiling();
 
+      void select_edge_color();
+
       // Asynchornous tiling generating.
       void generate_tiling();
-      void verify_async_tiling_generating();
-      bool is_async_filtering_ready();
       void stop_tiling();
 
       // Asynchornous tiling generating update.
@@ -120,7 +120,10 @@ namespace dak::quasitiler_app
       canvas_t*      my_tiling_canvas = nullptr;
 
       QWidgetListWidget*   my_tiling_list = nullptr;
-      QLabel*        my_tiling_label = nullptr;
+      QLabel*              my_tiling_label = nullptr;
+
+      QLabel*        my_edge_color_label = nullptr;
+      QPushButton*   my_edge_color_button = nullptr;
 
       QLabel*        my_generating_attempts_label = nullptr;
       QLabel*        my_generating_time_label = nullptr;
@@ -128,12 +131,13 @@ namespace dak::quasitiler_app
       QLabel*        my_dimension_count_label = nullptr;
       QComboBox*     my_dimension_count_combo = nullptr;
 
-      QTimer*        my_generate_tiling_timer = nullptr;
       QErrorMessage* my_error_message = nullptr;
 
 
       // Data.
+      ui::color_t    my_edge_color = ui::color_t(128, 128, 128);
       ui::color_t    my_color_table[tiling_t::MAX_DIM / 2][2];
+
       double         my_tiling_bounds[2][tiling_t::MAX_DIM] =
       {
          { -20., -20., -20., -20., -20., -20., -20., -20., },

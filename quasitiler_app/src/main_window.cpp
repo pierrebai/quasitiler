@@ -2,6 +2,8 @@
 #include <dimension_editor.h>
 #include <tile_group_editor.h>
 
+#include <dak/ui/qt/convert.h>
+
 #include <resource.h>
 
 #include <dak/QtAdditions/QtUtilities.h>
@@ -9,6 +11,7 @@
 #include <dak/QtAdditions/QWidgetListItem.h>
 
 #include <QtWidgets/qboxlayout.h>
+#include <QtWidgets/qcolordialog.h>
 #include <QtWidgets/qcombobox.h>
 #include <QtWidgets/qerrormessage.h>
 #include <QtWidgets/qtoolbar.h>
@@ -65,8 +68,6 @@ namespace dak::quasitiler_app
       setCorner(Qt::Corner::TopRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
       setCorner(Qt::Corner::BottomRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
 
-      my_generate_tiling_timer = new QTimer(this);
-      my_generate_tiling_timer->setSingleShot(true);
       my_error_message = new QErrorMessage(this);
 
       build_toolbar_ui();
@@ -82,17 +83,17 @@ namespace dak::quasitiler_app
       toolbar->setObjectName("Main Toolbar");
       toolbar->setIconSize(QSize(32, 32));
 
-      my_load_tiling_action = CreateAction(tr("Load Tiling"), IDB_OPEN_TILING, QKeySequence(QKeySequence::StandardKey::Open));
-      my_load_tiling_button = CreateToolButton(my_load_tiling_action);
-      toolbar->addWidget(my_load_tiling_button);
+      //my_load_tiling_action = CreateAction(tr("Load Tiling"), IDB_OPEN_TILING, QKeySequence(QKeySequence::StandardKey::Open));
+      //my_load_tiling_button = CreateToolButton(my_load_tiling_action);
+      //toolbar->addWidget(my_load_tiling_button);
 
-      my_save_tiling_action = CreateAction(tr("Save Tiling"), IDB_SAVE_TILING, QKeySequence(QKeySequence::StandardKey::Save));
-      my_save_tiling_button = CreateToolButton(my_save_tiling_action);
-      toolbar->addWidget(my_save_tiling_button);
+      //my_save_tiling_action = CreateAction(tr("Save Tiling"), IDB_SAVE_TILING, QKeySequence(QKeySequence::StandardKey::Save));
+      //my_save_tiling_button = CreateToolButton(my_save_tiling_action);
+      //toolbar->addWidget(my_save_tiling_button);
 
-      my_edit_tiling_action = CreateAction(tr("Edit Tiling"), IDB_EDIT_TILING);
-      my_edit_tiling_button = CreateToolButton(my_edit_tiling_action);
-      toolbar->addWidget(my_edit_tiling_button);
+      //my_edit_tiling_action = CreateAction(tr("Edit Tiling"), IDB_EDIT_TILING);
+      //my_edit_tiling_button = CreateToolButton(my_edit_tiling_action);
+      //toolbar->addWidget(my_edit_tiling_button);
 
       my_generate_tiling_action = CreateAction(tr("Generate Tiling"), IDB_GENERATE_TILING);
       my_generate_tiling_button = CreateToolButton(my_generate_tiling_action);
@@ -140,6 +141,12 @@ namespace dak::quasitiler_app
          my_dimension_count_combo->addItem(QString().asprintf("%d", i), QVariant(i));
       tiling_layout->addWidget(my_dimension_count_combo);
 
+      my_edge_color_label = new QLabel(tr("Edge Color"));
+      tiling_layout->addWidget(my_edge_color_label);
+
+      my_edge_color_button = new QPushButton;
+      tiling_layout->addWidget(my_edge_color_button);
+
       my_tiling_list = new QWidgetListWidget();
       my_tiling_list->setMinimumWidth(200);
       tiling_layout->addWidget(my_tiling_list);
@@ -175,11 +182,6 @@ namespace dak::quasitiler_app
    {
       // Asynchronous generating.
 
-      my_generate_tiling_timer->connect(my_generate_tiling_timer, &QTimer::timeout, [self = this]()
-      {
-         self->verify_async_tiling_generating();
-      });
-
       my_dimension_count_combo->connect(my_dimension_count_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), [self = this](int an_index)
       {
          self->stop_tiling();
@@ -188,25 +190,30 @@ namespace dak::quasitiler_app
          self->update_toolbar();
       });
 
+      my_edge_color_button->connect(my_edge_color_button, &QPushButton::clicked, [self = this]()
+      {
+         self->select_edge_color();
+      });
+
       // Toolbar.
 
-      my_load_tiling_action->connect(my_load_tiling_action, &QAction::triggered, [self = this]()
-      {
-         self->load_tiling();
-         self->update_toolbar();
-      });
+      //my_load_tiling_action->connect(my_load_tiling_action, &QAction::triggered, [self = this]()
+      //{
+      //   self->load_tiling();
+      //   self->update_toolbar();
+      //});
 
-      my_save_tiling_action->connect(my_save_tiling_action, &QAction::triggered, [self = this]()
-      {
-         self->save_tiling();
-         self->update_toolbar();
-      });
+      //my_save_tiling_action->connect(my_save_tiling_action, &QAction::triggered, [self = this]()
+      //{
+      //   self->save_tiling();
+      //   self->update_toolbar();
+      //});
 
-      my_edit_tiling_action->connect(my_edit_tiling_action, &QAction::triggered, [self = this]()
-      {
-         self->edit_tiling();
-         self->update_toolbar();
-      });
+      //my_edit_tiling_action->connect(my_edit_tiling_action, &QAction::triggered, [self = this]()
+      //{
+      //   self->edit_tiling();
+      //   self->update_toolbar();
+      //});
 
       my_generate_tiling_action->connect(my_generate_tiling_action, &QAction::triggered, [self = this]()
       {
@@ -229,11 +236,19 @@ namespace dak::quasitiler_app
 
    void main_window_t::fill_ui()
    {
+      fill_edge_color_ui();
       update_toolbar();
       my_dimension_count_combo->setCurrentIndex(2);
       stop_tiling();
       generate_tiling();
       update_tiling();
+   }
+
+   void main_window_t::fill_edge_color_ui()
+   {
+      QPixmap color_pixmap(16, 16);
+      color_pixmap.fill(ui::qt::convert(my_edge_color));
+      my_edge_color_button->setIcon(QIcon(color_pixmap));
    }
 
    /////////////////////////////////////////////////////////////////////////
@@ -317,6 +332,15 @@ namespace dak::quasitiler_app
       {
          showException("Could not edit the tiling:", ex);
       }
+   }
+
+   void main_window_t::select_edge_color()
+   {
+      const QColor new_color = QColorDialog::getColor(ui::qt::convert(my_edge_color), this, tr("Select Edge Color"), QColorDialog::ColorDialogOption::ShowAlphaChannel);
+
+      my_edge_color = ui::qt::convert(new_color);
+      fill_edge_color_ui();
+      draw_tiling();
    }
 
    void main_window_t::showException(const char* message, const std::exception& ex)
@@ -477,7 +501,6 @@ namespace dak::quasitiler_app
       {
          const double zoom = 30.;
 
-         const ui::color_t edgeColor = ui::color_t(128, 128, 128);
          const ui::stroke_t edgeStroke(1);
 
          int quad_x[4];
@@ -513,7 +536,7 @@ namespace dak::quasitiler_app
                   a_drw.set_color(tileColor);
                   a_drw.fill_polygon(polygon);
 
-                  a_drw.set_color(edgeColor);
+                  a_drw.set_color(my_edge_color);
                   a_drw.set_stroke(edgeStroke);
                   a_drw.draw_polygon(polygon);
                }
@@ -560,11 +583,17 @@ namespace dak::quasitiler_app
 
       for (int i = 0; i < my_tiling->dimensions_count(); ++i)
       {
-         auto item = new dimension_editor_t(i, my_tiling_bounds[0][i], my_tiling_bounds[1][i]);
+         auto item = new dimension_editor_t(i, my_tiling_bounds[0][i], my_tiling_bounds[1][i], my_tiling_offsets[i]);
          item->on_limits_changed = [self = this](int a_dim_index, double a_low_limit, double a_high_limit)
          {
             self->my_tiling_bounds[0][a_dim_index] = a_low_limit;
             self->my_tiling_bounds[1][a_dim_index] = a_high_limit;
+            self->stop_tiling();
+            self->generate_tiling();
+         };
+         item->on_offset_changed = [self = this](int a_dim_index, double an_offset)
+         {
+            self->my_tiling_offsets[a_dim_index] = an_offset;
             self->stop_tiling();
             self->generate_tiling();
          };
@@ -624,12 +653,12 @@ namespace dak::quasitiler_app
 
    void main_window_t::update_toolbar()
    {
-      my_load_tiling_action->setEnabled(true);
-      my_save_tiling_action->setEnabled(my_tiling != nullptr);
-      my_edit_tiling_action->setEnabled(my_tiling != nullptr);
+      //my_load_tiling_action->setEnabled(true);
+      //my_save_tiling_action->setEnabled(my_tiling != nullptr);
+      //my_edit_tiling_action->setEnabled(my_tiling != nullptr);
 
       my_generate_tiling_action->setEnabled(my_tiling != nullptr);
-      my_stop_tiling_action->setEnabled(my_async_generating.valid());
+      my_stop_tiling_action->setEnabled(my_tiling && !my_tiling->is_generated());
    }
 
    /////////////////////////////////////////////////////////////////////////
@@ -673,6 +702,7 @@ namespace dak::quasitiler_app
             drawing->locate_tiles(*self);
 
             self->draw_tiling();
+            self->update_toolbar();
 
             return 1;
          }
@@ -681,39 +711,6 @@ namespace dak::quasitiler_app
             return 0;
          }
       });
-      my_generate_tiling_timer->start(500);
-   }
-
-   bool main_window_t::is_async_filtering_ready()
-   {
-      if (!my_async_generating.valid())
-         return false;
-
-      if (my_async_generating.wait_for(1us) != future_status::ready)
-         return false;
-
-      return true;
-   }
-
-   void main_window_t::verify_async_tiling_generating()
-   {
-      update_generating_attempts();
-      update_generating_time();
-
-      if (!is_async_filtering_ready())
-      {
-         my_generate_tiling_timer->start(500);
-         return;
-      }
-
-      try
-      {
-         int result = my_async_generating.get();
-      }
-      catch (const std::exception& ex)
-      {
-         showException("Could not generate the tiling:", ex);
-      }
    }
 
    void main_window_t::stop_tiling()

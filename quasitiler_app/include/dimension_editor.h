@@ -24,9 +24,12 @@ namespace dak::quasitiler_app
       // Create the main window.
       dimension_editor_t(
          int a_dim_index,
-         double a_low_limit, double a_high_limit);
+         double a_low_limit, double a_high_limit,
+         double an_offset);
 
       std::function<void(int a_dim_index, double a_low_limit, double a_high_limit)> on_limits_changed;
+
+      std::function<void(int a_dim_index, double an_offset)> on_offset_changed;
 
    protected:
       // Create the UI elements.
@@ -38,13 +41,18 @@ namespace dak::quasitiler_app
       // Fill the UI with the intial data.
       void fill_ui();
 
+      void enterEvent(QEvent* event) override { QWidget::enterEvent(event); }
+      void leaveEvent(QEvent* event) override { QWidget::leaveEvent(event); }
+
       // UI.
       QLabel*                    my_dimension_name_label = nullptr;
       ui::qt::double_editor_t*   my_limit_editors[2] = { nullptr, nullptr };
+      ui::qt::double_editor_t*   my_offset_editor = nullptr;
 
       // Data.
       int            my_dimension = 0;
       double         my_limits[2] = { 0., 0. };
+      double         my_offset = 0.;
 
       Q_OBJECT;
    };

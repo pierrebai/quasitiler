@@ -60,14 +60,14 @@ namespace dak::quasitiler_app
       for (int i = 0; i < sizeof(my_color_buttons) / sizeof(my_color_buttons[0]); ++i)
       {
          QPixmap color_pixmap(16, 16);
-         color_pixmap.fill(QColor(my_colors[i].r, my_colors[i].g, my_colors[i].b, my_colors[i].a));
+         color_pixmap.fill(ui::qt::convert(my_colors[i]));
          my_color_buttons[i]->setIcon(QIcon(color_pixmap));
       }
    }
 
    void tile_group_editor_t::select_color(int a_color_index)
    {
-      const QColor new_color = QColorDialog::getColor(ui::qt::convert(my_colors[a_color_index]), this);
+      const QColor new_color = QColorDialog::getColor(ui::qt::convert(my_colors[a_color_index]), this, tr("Select Color"), QColorDialog::ColorDialogOption::ShowAlphaChannel);
 
       my_colors[a_color_index] = ui::qt::convert(new_color);
       fill_ui();
