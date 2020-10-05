@@ -9,7 +9,11 @@ QuasiTiler draws Penrose tilings and their generalizations. For more explanation
 The original code was written by Eugenio Durand in Objective-C for the Next computer. I ported the Objective-C code to Java in 1999.
 Now, I ported that Java code to C++ and Qt.
 
-![User Interface](https://github.com/pierrebai/quasitiler/blob/master/App.png)
+![User Interface](https://github.com/pierrebai/quasitiler/blob/main/App.png "User Interface")
+
+Example of output:
+
+![Autumn](https://github.com/pierrebai/quasitiler/blob/main/Autumn.png "Autumn")
 
 # Dependencies and Build
 The project requires Qt. It was built using Qt 5.15. It uses CMake to build the project. CMake 3.16.4 was used. A C++ compiler supporting C++ 2020 is needed. Visual Studio 2019 was used.
