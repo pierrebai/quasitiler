@@ -55,7 +55,7 @@ namespace dak::quasitiler_app
    // Fill the UI with the intial data.
    void tile_group_editor_t::fill_ui()
    {
-      my_tile_group_name_label->setText(QString::asprintf("Tile Group #%d", my_tile_group));
+      my_tile_group_name_label->setText(QString::asprintf("Tile Group #%d", my_tile_group + 1));
 
       for (int i = 0; i < sizeof(my_color_buttons) / sizeof(my_color_buttons[0]); ++i)
       {

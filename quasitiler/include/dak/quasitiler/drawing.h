@@ -25,8 +25,9 @@ namespace dak::quasitiler
       drawing_t(std::shared_ptr<tiling_t> a_tiling) : my_tiling(a_tiling) { }
 
       // Access to the drawing data.
-      const vertex_list_t& get_vertex_storage() const { return my_vertex_storage; }
-      const tile_list_t* get_tile_storage() const { return my_tile_storage; }
+      const vertex_list_t&      get_vertex_storage() const { return my_vertex_storage; }
+      const tile_list_t*        get_tile_storage() const   { return my_tile_storage; }
+      std::shared_ptr<tiling_t> get_tiling() const         { return my_tiling; }
 
       // Receives points, point_reporter_t implementation.
       void report_point(const vertex_t& a_point) override;

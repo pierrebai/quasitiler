@@ -50,7 +50,7 @@ namespace dak::quasitiler_app
    //
    // Main window of the quasitiler app.
 
-   class main_window_t : public QMainWindow, private utility::progress_t, public quasitiler::interruptor_t
+   class main_window_t : public QMainWindow, public quasitiler::interruptor_t
    {
    public:
       // Create the main window.
@@ -74,32 +74,31 @@ namespace dak::quasitiler_app
       void fill_ui();
       void fill_edge_color_ui();
 
-      // Tiling.
-      void load_tiling();
-      void save_tiling();
-      void edit_tiling();
-
-      void select_edge_color();
-
       // Asynchornous tiling generating.
       void generate_tiling();
       void stop_tiling();
 
-      // Asynchornous tiling generating update.
-      void update_progress(size_t a_total_count_so_far) override;
-
       // Interruptor.
       bool interrupted() override;
 
+      // Tiling drawing.
+      void select_edge_color();
       void draw_tiling();
       void draw_tiling(ui::drawing_t& a_drw);
+
+      // UI updates.
       void update_tiling();
       void update_toolbar();
-      void update_generating_attempts();
-      void update_generating_time();
 
       void showException(const char* message, const std::exception& ex);
 
+   signals:
+      void generate_tiling_done(drawing_t* a_drawing);
+
+   private slots:
+      void handle_generated_tiling(drawing_t* a_drawing);
+
+   private:
       // Toolbar buttons.
       QAction*       my_load_tiling_action = nullptr;
       QToolButton*   my_load_tiling_button = nullptr;
@@ -120,19 +119,14 @@ namespace dak::quasitiler_app
       canvas_t*      my_tiling_canvas = nullptr;
 
       QWidgetListWidget*   my_tiling_list = nullptr;
-      QLabel*              my_tiling_label = nullptr;
 
       QLabel*        my_edge_color_label = nullptr;
       QPushButton*   my_edge_color_button = nullptr;
-
-      QLabel*        my_generating_attempts_label = nullptr;
-      QLabel*        my_generating_time_label = nullptr;
 
       QLabel*        my_dimension_count_label = nullptr;
       QComboBox*     my_dimension_count_combo = nullptr;
 
       QErrorMessage* my_error_message = nullptr;
-
 
       // Data.
       ui::color_t    my_edge_color = ui::color_t(128, 128, 128);
@@ -150,15 +144,12 @@ namespace dak::quasitiler_app
 
       std::shared_ptr<tiling_t>     my_tiling;
       std::shared_ptr<drawing_t>    my_drawing;
-      std::filesystem::path         my_tiling_filename;
+
+      int                           my_dimensions_count = 5;
 
       std::future<int>              my_async_generating;
       std::atomic<bool>             my_stop_generating = false;
-      std::atomic<size_t>           my_generating_attempts = 0;
       
-      dak::utility::stopwatch_t     my_generating_stopwatch;
-      std::string                   my_generating_time_buffer;
-
       Q_OBJECT;
    };
 }

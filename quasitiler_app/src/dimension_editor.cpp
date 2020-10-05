@@ -78,7 +78,7 @@ namespace dak::quasitiler_app
    // Fill the UI with the intial data.
    void dimension_editor_t::fill_ui()
    {
-      my_dimension_name_label->setText(QString::asprintf("Dimension #%d", my_dimension));
+      my_dimension_name_label->setText(QString::asprintf("Dimension #%d", my_dimension + 1));
 
       for (int i = 0; i < sizeof(my_limits) / sizeof(my_limits[0]); ++i)
       {

@@ -50,11 +50,10 @@ namespace dak::quasitiler_app
    // Create the main window.
 
    main_window_t::main_window_t()
-      : progress_t(10000), my_generating_stopwatch(my_generating_time_buffer)
    {
       build_ui();
-      fill_ui();
       connect_ui();
+      fill_ui();
    }
 
    /////////////////////////////////////////////////////////////////////////
@@ -83,18 +82,6 @@ namespace dak::quasitiler_app
       toolbar->setObjectName("Main Toolbar");
       toolbar->setIconSize(QSize(32, 32));
 
-      //my_load_tiling_action = CreateAction(tr("Load Tiling"), IDB_OPEN_TILING, QKeySequence(QKeySequence::StandardKey::Open));
-      //my_load_tiling_button = CreateToolButton(my_load_tiling_action);
-      //toolbar->addWidget(my_load_tiling_button);
-
-      //my_save_tiling_action = CreateAction(tr("Save Tiling"), IDB_SAVE_TILING, QKeySequence(QKeySequence::StandardKey::Save));
-      //my_save_tiling_button = CreateToolButton(my_save_tiling_action);
-      //toolbar->addWidget(my_save_tiling_button);
-
-      //my_edit_tiling_action = CreateAction(tr("Edit Tiling"), IDB_EDIT_TILING);
-      //my_edit_tiling_button = CreateToolButton(my_edit_tiling_action);
-      //toolbar->addWidget(my_edit_tiling_button);
-
       my_generate_tiling_action = CreateAction(tr("Generate Tiling"), IDB_GENERATE_TILING);
       my_generate_tiling_button = CreateToolButton(my_generate_tiling_action);
       toolbar->addWidget(my_generate_tiling_button);
@@ -118,19 +105,7 @@ namespace dak::quasitiler_app
       auto info_layout = new QHBoxLayout(info_container);
       info_layout->setMargin(0);
 
-      my_generating_time_label = new QLabel;
-      my_generating_time_label->hide();
-      info_layout->addWidget(my_generating_time_label);
-
-      my_generating_attempts_label = new QLabel;
-      my_generating_attempts_label->hide();
-      info_layout->addWidget(my_generating_attempts_label);
-
       tiling_layout->addWidget(info_container);
-
-      my_tiling_label = new QLabel;
-      my_tiling_label->hide();
-      tiling_layout->addWidget(my_tiling_label);
 
       my_dimension_count_label = new QLabel;
       my_dimension_count_label->setText(tr("Dimensions"));
@@ -182,11 +157,16 @@ namespace dak::quasitiler_app
    {
       // Asynchronous generating.
 
+      connect(this, &main_window_t::generate_tiling_done, this, &main_window_t::handle_generated_tiling, Qt::ConnectionType::QueuedConnection);
+
+      // UI.
       my_dimension_count_combo->connect(my_dimension_count_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), [self = this](int an_index)
       {
+         self->my_dimensions_count = self->my_dimension_count_combo->currentData().toInt();
+
          self->stop_tiling();
-         self->generate_tiling();
          self->update_tiling();
+         self->generate_tiling();
          self->update_toolbar();
       });
 
@@ -196,24 +176,6 @@ namespace dak::quasitiler_app
       });
 
       // Toolbar.
-
-      //my_load_tiling_action->connect(my_load_tiling_action, &QAction::triggered, [self = this]()
-      //{
-      //   self->load_tiling();
-      //   self->update_toolbar();
-      //});
-
-      //my_save_tiling_action->connect(my_save_tiling_action, &QAction::triggered, [self = this]()
-      //{
-      //   self->save_tiling();
-      //   self->update_toolbar();
-      //});
-
-      //my_edit_tiling_action->connect(my_edit_tiling_action, &QAction::triggered, [self = this]()
-      //{
-      //   self->edit_tiling();
-      //   self->update_toolbar();
-      //});
 
       my_generate_tiling_action->connect(my_generate_tiling_action, &QAction::triggered, [self = this]()
       {
@@ -240,8 +202,8 @@ namespace dak::quasitiler_app
       update_toolbar();
       my_dimension_count_combo->setCurrentIndex(2);
       stop_tiling();
-      generate_tiling();
       update_tiling();
+      generate_tiling();
    }
 
    void main_window_t::fill_edge_color_ui()
@@ -254,85 +216,6 @@ namespace dak::quasitiler_app
    /////////////////////////////////////////////////////////////////////////
    //
    // Tiling.
-
-   void main_window_t::load_tiling()
-   {
-      static constexpr char tiling_file_types[] = "Tiling Text files (*.txt);;All files (*.*)";
-
-      try
-      {
-         // We must stop on load because otherwise the threads are preventing the dialog from opening!
-         stop_tiling();
-
-         filesystem::path path = AskOpen(tr("Load Tiling"), tr(tiling_file_types), this);
-         if (path.empty())
-            return;
-
-         std::ifstream tiling_stream(path);
-         //tiling_stream >> my_tiling; // TODO
-         my_tiling_filename = path;
-         update_tiling();
-      }
-      catch (const std::exception& ex)
-      {
-         showException("Could not load the tiling:", ex);
-      }
-   }
-
-   void main_window_t::save_tiling()
-   {
-      static constexpr char tiling_file_types[] = "Tiling Text files (*.txt);;All files (*.*)";
-
-      try
-      {
-         // We must stop on save because otherwise the threads are preventing the dialog from opening!
-         stop_tiling();
-
-         filesystem::path path = AskSave(tr("Save Tiling"), tr(tiling_file_types), my_tiling_filename.string().c_str(), this);
-         if (path.empty())
-            return;
-
-         std::ofstream tiling_stream(path);
-         //tiling_stream << my_tiling; TODO
-         my_tiling_filename = path;
-         update_tiling();
-      }
-      catch (const std::exception& ex)
-      {
-         showException("Could not load the tiling:", ex);
-      }
-   }
-
-   void main_window_t::edit_tiling()
-   {
-      try
-      {
-         // We must stop on save because otherwise the threads are preventing the dialog from opening!
-         stop_tiling();
-
-         std::string tiling_text;
-         {
-            std::ostringstream tiling_stream;
-            //tiling_stream << my_tiling; TODO
-            tiling_text = tiling_stream.str();
-         }
-
-         auto new_text = QInputDialog::getMultiLineText(this, "Edit Tiling", "Modify the tiling description", tiling_text.c_str());
-
-         if (!new_text.isEmpty())
-         {
-            tiling_text = new_text.toStdString();
-            std::istringstream tiling_stream(tiling_text);
-            //tiling_stream >> my_tiling; TODO
-         }
-
-         update_tiling();
-      }
-      catch (const std::exception& ex)
-      {
-         showException("Could not edit the tiling:", ex);
-      }
-   }
 
    void main_window_t::select_edge_color()
    {
@@ -421,18 +304,18 @@ namespace dak::quasitiler_app
       if (!my_tiling)
          return ui::color_t(0, 0, 0);
 
-      const int row = tile_index / my_tiling->dimensions_count();
-      const int col = tile_index % my_tiling->dimensions_count();
+      const int row = tile_index / my_dimensions_count;
+      const int col = tile_index % my_dimensions_count;
 
       int row_count;
-      if (row >= my_tiling->dimensions_count() / 2 - 1
-              && my_tiling->dimensions_count() % 2 == 0)
+      if (row >= my_dimensions_count / 2 - 1
+              && my_dimensions_count % 2 == 0)
       {
-         row_count = my_tiling->dimensions_count() / 2 - 1;
+         row_count = my_dimensions_count / 2 - 1;
       }
       else
       {
-         row_count = my_tiling->dimensions_count() - 1;
+         row_count = my_dimensions_count - 1;
       }
 
       // Interpolate color.
@@ -497,7 +380,6 @@ namespace dak::quasitiler_app
 
       // Display the tiles.
 
-      //if (tilesDisplayed || edgesDisplayed || verticesDisplayed)
       {
          const double zoom = 30.;
 
@@ -541,11 +423,6 @@ namespace dak::quasitiler_app
                   a_drw.draw_polygon(polygon);
                }
             }
-
-            // Check if the user wants to stop right now
-
-     //	    if ( interrupted ( ) )
-     //	       return;
          }
       }
    }
@@ -556,22 +433,9 @@ namespace dak::quasitiler_app
 
    void main_window_t::update_tiling()
    {
-      if (my_tiling_filename.filename().string().size() > 0)
-      {
-         my_tiling_label->setText(my_tiling_filename.filename().string().c_str());
-         my_tiling_label->show();
-      }
-      else
-      {
-         my_tiling_label->hide();
-      }
-
-      if (!my_tiling)
-         return;
-
       my_tiling_list->clear();
 
-      for (int i = 0; i < my_tiling->dimensions_count() / 2; ++i)
+      for (int i = 0; i < my_dimensions_count / 2; ++i)
       {
          auto item = new tile_group_editor_t(i, get_color(i, 0), get_color(i, 1));
          item->on_color_changed = [self = this](ui::color_t a_color, int a_tile_group_index, int a_parity_index)
@@ -581,7 +445,7 @@ namespace dak::quasitiler_app
          my_tiling_list->addItem(item);
       }
 
-      for (int i = 0; i < my_tiling->dimensions_count(); ++i)
+      for (int i = 0; i < my_dimensions_count; ++i)
       {
          auto item = new dimension_editor_t(i, my_tiling_bounds[0][i], my_tiling_bounds[1][i], my_tiling_offsets[i]);
          item->on_limits_changed = [self = this](int a_dim_index, double a_low_limit, double a_high_limit)
@@ -600,55 +464,10 @@ namespace dak::quasitiler_app
          my_tiling_list->addItem(item);
       }
 
-      my_generating_attempts = 0;
-      my_generating_stopwatch.elapsed();
       my_stop_generating = true;
 
       draw_tiling();
-      update_generating_attempts();
-      update_generating_time();
       update_toolbar();
-   }
-
-   void main_window_t::update_generating_time()
-   {
-      if (my_generating_attempts)
-      {
-         my_generating_stopwatch.elapsed();
-
-         my_generating_time_label->setText((std::string("Time: ") + my_generating_time_buffer).c_str());
-
-         if (!my_generating_time_label->isVisible())
-            my_generating_time_label->show();
-      }
-      else
-      {
-         if (my_generating_time_label->isVisible())
-            my_generating_time_label->hide();
-      }
-   }
-
-   void main_window_t::update_generating_attempts()
-   {
-      if (my_generating_attempts)
-      {
-         ostringstream stream;
-         if (my_generating_attempts < 2 * 1000)
-            stream << "Attempts: " << my_generating_attempts;
-         else if (my_generating_attempts < 2 * 1000 * 1000)
-            stream << "Attempts: " << (my_generating_attempts / 1000) << " thousands";
-         else
-            stream << "Attempts: " << (my_generating_attempts / (1000 * 1000)) << " millions";
-
-         my_generating_attempts_label->setText(stream.str().c_str());
-         if (!my_generating_attempts_label->isVisible())
-            my_generating_attempts_label->show();
-      }
-      else
-      {
-         if (my_generating_attempts_label->isVisible())
-            my_generating_attempts_label->hide();
-      }
    }
 
    void main_window_t::update_toolbar()
@@ -670,39 +489,25 @@ namespace dak::quasitiler_app
       return my_stop_generating;
    }
 
-   void main_window_t::update_progress(size_t a_total_count_so_far)
-   {
-      my_generating_attempts = a_total_count_so_far;
-      if (my_stop_generating)
-         throw std::exception("Stop generating the tiling.");
-   }
-
    /////////////////////////////////////////////////////////////////////////
    //
    // Asynchornous tiling generating.
 
    void main_window_t::generate_tiling()
    {
-      const int dim_count = my_dimension_count_combo->currentData().toInt();
-      my_tiling = std::make_shared<tiling_t>(dim_count);
-      my_drawing = std::make_shared<drawing_t>(my_tiling);
-
       my_stop_generating = false;
-      my_generating_attempts = 0;
-      my_generating_stopwatch.start();
-      my_async_generating = std::async(std::launch::async, [self = this]()
+      my_async_generating = std::async(std::launch::async, [self = this, dim_count = my_dimensions_count]()
       {
          try
          {
-            auto tiling = self->my_tiling;
-            auto drawing = self->my_drawing;
+            auto tiling = std::make_shared<tiling_t>(dim_count);
+            auto drawing = std::make_unique<drawing_t>(tiling);
 
             tiling->init(self->my_tiling_offsets);
             tiling->generate(self->my_tiling_bounds, *drawing, *self);
             drawing->locate_tiles(*self);
 
-            self->draw_tiling();
-            self->update_toolbar();
+            self->generate_tiling_done(drawing.release());
 
             return 1;
          }
@@ -711,6 +516,15 @@ namespace dak::quasitiler_app
             return 0;
          }
       });
+   }
+
+   void main_window_t::handle_generated_tiling(drawing_t* a_drawing)
+   {
+      my_tiling = a_drawing->get_tiling();
+      my_drawing.reset(a_drawing);
+
+      draw_tiling();
+      update_toolbar();
    }
 
    void main_window_t::stop_tiling()
