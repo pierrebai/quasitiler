@@ -8,6 +8,7 @@
 #include <dak/quasitiler/interruptor.h>
 
 #include <dak/ui/qt/function_drawing_canvas.h>
+#include <dak/ui/qt/color_editor.h>
 
 #include <QtWidgets/qmainwindow.h>
 #include <QtWidgets/qlistwidget.h>
@@ -72,7 +73,6 @@ namespace dak::quasitiler_app
 
       // Fill the UI with the intial data.
       void fill_ui();
-      void fill_edge_color_ui();
 
       // Asynchornous tiling generating.
       void generate_tiling();
@@ -82,7 +82,6 @@ namespace dak::quasitiler_app
       bool interrupted() override;
 
       // Tiling drawing.
-      void select_edge_color();
       void draw_tiling();
       void draw_tiling(ui::drawing_t& a_drw);
 
@@ -120,8 +119,7 @@ namespace dak::quasitiler_app
 
       QWidgetListWidget*   my_tiling_list = nullptr;
 
-      QLabel*        my_edge_color_label = nullptr;
-      QPushButton*   my_edge_color_button = nullptr;
+      ui::qt::color_editor_t* my_edge_color_editor = nullptr;
 
       QLabel*        my_dimension_count_label = nullptr;
       QComboBox*     my_dimension_count_combo = nullptr;

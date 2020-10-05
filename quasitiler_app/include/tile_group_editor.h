@@ -5,6 +5,7 @@
 
 #include <dak/QtAdditions/QWidgetListItem.h>
 #include <dak/ui/color.h>
+#include <dak/ui/qt/color_editor.h>
 
 class QLabel;
 class QPushButton;
@@ -29,27 +30,20 @@ namespace dak::quasitiler_app
 
    protected:
       // Create the UI elements.
-      void build_ui();
+      void build_ui(ui::color_t a_color_1, ui::color_t a_color_2);
 
       // Connect the signals of the UI elements.
       void connect_ui();
-
-      // Fill the UI with the intial data.
-      void fill_ui();
-
-      // UI feedback.
-      void select_color(int a_color_index);
 
       void enterEvent(QEvent* event) override { QWidget::enterEvent(event); }
       void leaveEvent(QEvent* event) override { QWidget::leaveEvent(event); }
 
       // UI.
-      QLabel*        my_tile_group_name_label = nullptr;
-      QPushButton*   my_color_buttons[2] = { nullptr, nullptr };
+      QLabel*                 my_tile_group_name_label = nullptr;
+      ui::qt::color_editor_t* my_color_editors[2]      = { nullptr, nullptr };
 
       // Data.
-      int            my_tile_group = 0;
-      ui::color_t    my_colors[2];
+      int my_tile_group = 0;
 
       Q_OBJECT;
    };

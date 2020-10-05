@@ -116,11 +116,8 @@ namespace dak::quasitiler_app
          my_dimension_count_combo->addItem(QString().asprintf("%d", i), QVariant(i));
       tiling_layout->addWidget(my_dimension_count_combo);
 
-      my_edge_color_label = new QLabel(tr("Edge Color"));
-      tiling_layout->addWidget(my_edge_color_label);
-
-      my_edge_color_button = new QPushButton;
-      tiling_layout->addWidget(my_edge_color_button);
+      my_edge_color_editor = new ui::qt::color_editor_t(this, L"Edge Color", my_edge_color);
+      tiling_layout->addWidget(my_edge_color_editor);
 
       my_tiling_list = new QWidgetListWidget();
       my_tiling_list->setMinimumWidth(200);
@@ -139,9 +136,9 @@ namespace dak::quasitiler_app
       auto main_layout = new QVBoxLayout(main_container);
 
       my_tiling_canvas = new canvas_t(this, [self = this](ui::drawing_t& drw)
-         {
-            self->draw_tiling(drw);
-         });
+      {
+         self->draw_tiling(drw);
+      });
       my_tiling_canvas->transformer.mouse_interaction_modifier = ui::modifiers_t::none;
 
       main_layout->addWidget(my_tiling_canvas);
@@ -170,10 +167,11 @@ namespace dak::quasitiler_app
          self->update_toolbar();
       });
 
-      my_edge_color_button->connect(my_edge_color_button, &QPushButton::clicked, [self = this]()
+      my_edge_color_editor->on_color_changed = [self = this](ui::color_t a_color)
       {
-         self->select_edge_color();
-      });
+         self->my_edge_color = a_color;
+         self->draw_tiling();
+      };
 
       // Toolbar.
 
@@ -198,7 +196,6 @@ namespace dak::quasitiler_app
 
    void main_window_t::fill_ui()
    {
-      fill_edge_color_ui();
       update_toolbar();
       my_dimension_count_combo->setCurrentIndex(2);
       stop_tiling();
@@ -206,25 +203,9 @@ namespace dak::quasitiler_app
       generate_tiling();
    }
 
-   void main_window_t::fill_edge_color_ui()
-   {
-      QPixmap color_pixmap(16, 16);
-      color_pixmap.fill(ui::qt::convert(my_edge_color));
-      my_edge_color_button->setIcon(QIcon(color_pixmap));
-   }
-
    /////////////////////////////////////////////////////////////////////////
    //
    // Tiling.
-
-   void main_window_t::select_edge_color()
-   {
-      const QColor new_color = QColorDialog::getColor(ui::qt::convert(my_edge_color), this, tr("Select Edge Color"), QColorDialog::ColorDialogOption::ShowAlphaChannel);
-
-      my_edge_color = ui::qt::convert(new_color);
-      fill_edge_color_ui();
-      draw_tiling();
-   }
 
    void main_window_t::showException(const char* message, const std::exception& ex)
    {
