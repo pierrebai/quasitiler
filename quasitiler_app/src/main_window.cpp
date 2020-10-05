@@ -101,12 +101,6 @@ namespace dak::quasitiler_app
       auto tiling_container = new QWidget();
       auto tiling_layout = new QVBoxLayout(tiling_container);
 
-      auto info_container = new QWidget();
-      auto info_layout = new QHBoxLayout(info_container);
-      info_layout->setMargin(0);
-
-      tiling_layout->addWidget(info_container);
-
       my_dimension_count_label = new QLabel;
       my_dimension_count_label->setText(tr("Dimensions"));
       tiling_layout->addWidget(my_dimension_count_label);
@@ -116,8 +110,16 @@ namespace dak::quasitiler_app
          my_dimension_count_combo->addItem(QString().asprintf("%d", i), QVariant(i));
       tiling_layout->addWidget(my_dimension_count_combo);
 
+      my_tile_size_editor = new ui::qt::int_editor_t(this, L"Tile Size", my_tile_size);
+      my_tile_size_editor->set_limits(1, 100);
+      tiling_layout->addWidget(my_tile_size_editor);
+
       my_edge_color_editor = new ui::qt::color_editor_t(this, L"Edge Color", my_edge_color);
       tiling_layout->addWidget(my_edge_color_editor);
+
+      my_edge_thickness_editor = new ui::qt::int_editor_t(this, L"Edge Thickness", my_edge_thickness);
+      my_edge_thickness_editor->set_limits(0, 100);
+      tiling_layout->addWidget(my_edge_thickness_editor);
 
       my_tiling_list = new QWidgetListWidget();
       my_tiling_list->setMinimumWidth(200);
@@ -170,6 +172,18 @@ namespace dak::quasitiler_app
       my_edge_color_editor->on_color_changed = [self = this](ui::color_t a_color)
       {
          self->my_edge_color = a_color;
+         self->draw_tiling();
+      };
+
+      my_edge_thickness_editor->value_changed = [self = this](int a_value, bool is_interactive)
+      {
+         self->my_edge_thickness = a_value;
+         self->draw_tiling();
+      };
+
+      my_tile_size_editor->value_changed = [self = this](int a_value, bool is_interactive)
+      {
+         self->my_tile_size = a_value;
          self->draw_tiling();
       };
 
@@ -362,9 +376,7 @@ namespace dak::quasitiler_app
       // Display the tiles.
 
       {
-         const double zoom = 30.;
-
-         const ui::stroke_t edgeStroke(1);
+         const int tile_size = my_tile_size;
 
          int quad_x[4];
          int quad_y[4];
@@ -375,20 +387,48 @@ namespace dak::quasitiler_app
             const int gen1 = tiling.tile_generator[comb][1];
 
             const ui::color_t tileColor = get_tile_color(comb);
+            a_drw.set_color(tileColor);
 
             for (size_t ind = 0; ind < my_tile_storage[comb].size(); ++ind)
             {
                const size_t vertex_index = my_tile_storage[comb][ind];
-               quad_x[0] = (int)(zoom * (vertices[vertex_index].x));
-               quad_y[0] = (int)(zoom * (vertices[vertex_index].y));
-               quad_x[1] = (int)(zoom * (vertices[vertex_index].x + generator[gen0][0]));
-               quad_y[1] = (int)(zoom * (vertices[vertex_index].y + generator[gen0][1]));
-               quad_x[2] = (int)(zoom * (vertices[vertex_index].x + generator[gen0][0] + generator[gen1][0]));
-               quad_y[2] = (int)(zoom * (vertices[vertex_index].y + generator[gen0][1] + generator[gen1][1]));
-               quad_x[3] = (int)(zoom * (vertices[vertex_index].x + generator[gen1][0]));
-               quad_y[3] = (int)(zoom * (vertices[vertex_index].y + generator[gen1][1]));
+               quad_x[0] = (int)(tile_size * (vertices[vertex_index].x));
+               quad_y[0] = (int)(tile_size * (vertices[vertex_index].y));
+               quad_x[1] = (int)(tile_size * (vertices[vertex_index].x + generator[gen0][0]));
+               quad_y[1] = (int)(tile_size * (vertices[vertex_index].y + generator[gen0][1]));
+               quad_x[2] = (int)(tile_size * (vertices[vertex_index].x + generator[gen0][0] + generator[gen1][0]));
+               quad_y[2] = (int)(tile_size * (vertices[vertex_index].y + generator[gen0][1] + generator[gen1][1]));
+               quad_x[3] = (int)(tile_size * (vertices[vertex_index].x + generator[gen1][0]));
+               quad_y[3] = (int)(tile_size * (vertices[vertex_index].y + generator[gen1][1]));
 
+               ui::polygon_t polygon;
+               polygon.points.push_back(ui::point_t(quad_x[0], quad_y[0]));
+               polygon.points.push_back(ui::point_t(quad_x[1], quad_y[1]));
+               polygon.points.push_back(ui::point_t(quad_x[2], quad_y[2]));
+               polygon.points.push_back(ui::point_t(quad_x[3], quad_y[3]));
+               polygon.points.push_back(ui::point_t(quad_x[0], quad_y[0]));
+
+               a_drw.fill_polygon(polygon);
+            }
+
+            if (my_edge_thickness > 0)
+            {
+               const ui::stroke_t edgeStroke(my_edge_thickness);
+               a_drw.set_color(my_edge_color);
+               a_drw.set_stroke(edgeStroke);
+
+               for (size_t ind = 0; ind < my_tile_storage[comb].size(); ++ind)
                {
+                  const size_t vertex_index = my_tile_storage[comb][ind];
+                  quad_x[0] = (int)(tile_size * (vertices[vertex_index].x));
+                  quad_y[0] = (int)(tile_size * (vertices[vertex_index].y));
+                  quad_x[1] = (int)(tile_size * (vertices[vertex_index].x + generator[gen0][0]));
+                  quad_y[1] = (int)(tile_size * (vertices[vertex_index].y + generator[gen0][1]));
+                  quad_x[2] = (int)(tile_size * (vertices[vertex_index].x + generator[gen0][0] + generator[gen1][0]));
+                  quad_y[2] = (int)(tile_size * (vertices[vertex_index].y + generator[gen0][1] + generator[gen1][1]));
+                  quad_x[3] = (int)(tile_size * (vertices[vertex_index].x + generator[gen1][0]));
+                  quad_y[3] = (int)(tile_size * (vertices[vertex_index].y + generator[gen1][1]));
+
                   ui::polygon_t polygon;
                   polygon.points.push_back(ui::point_t(quad_x[0], quad_y[0]));
                   polygon.points.push_back(ui::point_t(quad_x[1], quad_y[1]));
@@ -396,11 +436,6 @@ namespace dak::quasitiler_app
                   polygon.points.push_back(ui::point_t(quad_x[3], quad_y[3]));
                   polygon.points.push_back(ui::point_t(quad_x[0], quad_y[0]));
 
-                  a_drw.set_color(tileColor);
-                  a_drw.fill_polygon(polygon);
-
-                  a_drw.set_color(my_edge_color);
-                  a_drw.set_stroke(edgeStroke);
                   a_drw.draw_polygon(polygon);
                }
             }

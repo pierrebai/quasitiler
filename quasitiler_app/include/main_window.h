@@ -9,6 +9,7 @@
 
 #include <dak/ui/qt/function_drawing_canvas.h>
 #include <dak/ui/qt/color_editor.h>
+#include <dak/ui/qt/int_editor.h>
 
 #include <QtWidgets/qmainwindow.h>
 #include <QtWidgets/qlistwidget.h>
@@ -120,6 +121,9 @@ namespace dak::quasitiler_app
       QWidgetListWidget*   my_tiling_list = nullptr;
 
       ui::qt::color_editor_t* my_edge_color_editor = nullptr;
+      ui::qt::int_editor_t*   my_edge_thickness_editor = nullptr;
+
+      ui::qt::int_editor_t* my_tile_size_editor = nullptr;
 
       QLabel*        my_dimension_count_label = nullptr;
       QComboBox*     my_dimension_count_combo = nullptr;
@@ -127,7 +131,9 @@ namespace dak::quasitiler_app
       QErrorMessage* my_error_message = nullptr;
 
       // Data.
-      ui::color_t    my_edge_color = ui::color_t(128, 128, 128);
+      ui::color_t    my_edge_color = ui::color_t(128, 128, 128, 80);
+      int            my_edge_thickness = 1;
+
       ui::color_t    my_color_table[tiling_t::MAX_DIM / 2][2];
 
       double         my_tiling_bounds[2][tiling_t::MAX_DIM] =
@@ -139,6 +145,8 @@ namespace dak::quasitiler_app
       {
          0., 0., 0., 0., 0., 0., 0., 0.,
       };
+
+      int            my_tile_size = 30;
 
       std::shared_ptr<tiling_t>     my_tiling;
       std::shared_ptr<drawing_t>    my_drawing;
