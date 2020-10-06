@@ -18,6 +18,8 @@ add_executable(quasitiler_app WIN32
    resources/resource.rc                resources/resource.h
 
    "${PROJECT_SOURCE_DIR}/App.png"
+   "${PROJECT_SOURCE_DIR}/Autumn.png"
+   "${PROJECT_SOURCE_DIR}/Waves.png"
    "${PROJECT_SOURCE_DIR}/LICENSE"
    "${PROJECT_SOURCE_DIR}/README.md"
 )
@@ -66,10 +68,10 @@ set(CPACK_GENERATOR NSIS)
 set(CPACK_PACKAGE_NAME "Quasitiler")
 set(CPACK_PACKAGE_VENDOR "Pierre Baillargeon")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Quasitiler - An application to create quasi-periodic tilings.")
-set(CPACK_PACKAGE_VERSION "1.0.2")
+set(CPACK_PACKAGE_VERSION "1.0.3")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
-set(CPACK_PACKAGE_VERSION_PATCH "2")
+set(CPACK_PACKAGE_VERSION_PATCH "3")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Quasitiler")
 set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 

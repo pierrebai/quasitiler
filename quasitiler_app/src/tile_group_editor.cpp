@@ -35,7 +35,7 @@ namespace dak::quasitiler_app
          layout->addWidget(my_color_editors[i]);
       }
 
-      layout->addStretch();
+      layout->addStretch(1);
    }
 
    // Connect the signals of the UI elements.

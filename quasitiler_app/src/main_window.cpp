@@ -9,6 +9,7 @@
 #include <dak/QtAdditions/QtUtilities.h>
 #include <dak/QtAdditions/QWidgetListWidget.h>
 #include <dak/QtAdditions/QWidgetListItem.h>
+#include <dak/QtAdditions/QWidgetScrollListWidget.h>
 
 #include <QtWidgets/qboxlayout.h>
 #include <QtWidgets/qcolordialog.h>
@@ -114,16 +115,23 @@ namespace dak::quasitiler_app
       my_tile_size_editor->set_limits(1, 100);
       tiling_layout->addWidget(my_tile_size_editor);
 
+      auto edge_container = new QWidget();
+      auto edge_layout = new QHBoxLayout(edge_container);
+      edge_layout->setMargin(0);
+      tiling_layout->addWidget(edge_container);
+
       my_edge_color_editor = new ui::qt::color_editor_t(this, L"Edge Color", my_edge_color);
-      tiling_layout->addWidget(my_edge_color_editor);
+      edge_layout->addWidget(my_edge_color_editor);
 
       my_edge_thickness_editor = new ui::qt::int_editor_t(this, L"Edge Thickness", my_edge_thickness);
       my_edge_thickness_editor->set_limits(0, 100);
-      tiling_layout->addWidget(my_edge_thickness_editor);
+      edge_layout->addWidget(my_edge_thickness_editor);
 
       my_tiling_list = new QWidgetListWidget();
       my_tiling_list->setMinimumWidth(200);
-      tiling_layout->addWidget(my_tiling_list);
+
+      auto tiling_list_scroll = new QWidgetScrollListWidget(my_tiling_list);
+      tiling_layout->addWidget(tiling_list_scroll);
 
       tiling_dock->setWidget(tiling_container);
 
