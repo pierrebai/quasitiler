@@ -15,7 +15,7 @@ target_compile_features(quasitiler_tests PUBLIC cxx_std_20)
 
 target_include_directories(quasitiler_tests PUBLIC
    "${PROJECT_SOURCE_DIR}/quasitiler/include"
-   "${PROJECT_SOURCE_DIR}/dak_utility/utility/include"
+   "${PROJECT_SOURCE_DIR}/dak/utility/include"
    "${PROJECT_SOURCE_DIR}/quasitiler_tests/include"
 )
 

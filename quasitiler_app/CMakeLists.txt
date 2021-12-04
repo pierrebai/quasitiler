@@ -44,10 +44,10 @@ target_include_directories(quasitiler_app PUBLIC
    include
    resources
    "${PROJECT_SOURCE_DIR}/quasitiler/include"
-   "${PROJECT_SOURCE_DIR}/dak_utility/utility/include"
-   "${PROJECT_SOURCE_DIR}/dak_utility/geometry/include"
-   "${PROJECT_SOURCE_DIR}/dak_utility/ui/include"
-   "${PROJECT_SOURCE_DIR}/dak_utility/ui_qt/include"
+   "${PROJECT_SOURCE_DIR}/dak/utility/include"
+   "${PROJECT_SOURCE_DIR}/dak/geometry/include"
+   "${PROJECT_SOURCE_DIR}/dak/ui/include"
+   "${PROJECT_SOURCE_DIR}/dak/ui_qt/include"
    "${PROJECT_SOURCE_DIR}/QtAdditions/include"
 )
 
