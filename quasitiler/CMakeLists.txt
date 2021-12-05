@@ -9,9 +9,9 @@ add_library(quasitiler
 
 target_include_directories(quasitiler PUBLIC
    include
-   "${PROJECT_SOURCE_DIR}/dak/utility/include"
-   "${PROJECT_SOURCE_DIR}/dak/geometry/include"
 )
+
+target_link_libraries(quasitiler dak_utility dak_geometry)
 
 target_compile_features(quasitiler PUBLIC cxx_std_20)
 

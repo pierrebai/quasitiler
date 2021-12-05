@@ -28,10 +28,10 @@ set_target_properties(quasitiler_app PROPERTIES OUTPUT_NAME "Quasitiler")
 
 target_link_libraries(quasitiler_app PUBLIC
    quasitiler
-   utility
-   geometry
-   ui
-   ui_qt
+   dak_utility
+   dak_geometry
+   dak_ui
+   dak_ui_qt
    QtAdditions
    Qt5::Widgets Qt5::Gui Qt5::Core Qt5::WinExtras
 )
@@ -40,15 +40,9 @@ target_compile_features(quasitiler_app PUBLIC
    cxx_std_20
 )
 
-target_include_directories(quasitiler_app PUBLIC
+target_include_directories(quasitiler_app PRIVATE
    include
    resources
-   "${PROJECT_SOURCE_DIR}/quasitiler/include"
-   "${PROJECT_SOURCE_DIR}/dak/utility/include"
-   "${PROJECT_SOURCE_DIR}/dak/geometry/include"
-   "${PROJECT_SOURCE_DIR}/dak/ui/include"
-   "${PROJECT_SOURCE_DIR}/dak/ui_qt/include"
-   "${PROJECT_SOURCE_DIR}/QtAdditions/include"
 )
 
 add_custom_command(TARGET quasitiler_app POST_BUILD
